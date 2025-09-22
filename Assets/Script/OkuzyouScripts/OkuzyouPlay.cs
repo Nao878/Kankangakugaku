@@ -1,97 +1,119 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 public class OkuzyouPlay : MonoBehaviour
 {
-    public float speed = 1.8f;
-    private Rigidbody2D rb = null;
-    public GameObject massagePanel, aibouPic,akanaiText,sikabaneText,zihankiText;
-    private bool moveCheck = true;
+    [Header("Movement Settings")]
+    [SerializeField] private float speed = 1.8f;
+    private Rigidbody2D rb;
+    private bool canMove = true;
 
-    private void Start()
+    [Header("UI References")]
+    [SerializeField] private GameObject messagePanel;
+    [SerializeField] private GameObject aibouPic;
+    [SerializeField] private GameObject akanaiText;
+    [SerializeField] private GameObject sikabaneText;
+    [SerializeField] private GameObject zihankiText;
+
+    // 各エリアごとの接触フラグ
+    private bool isInFinish = false;
+    private bool isInShikabane = false;
+    private bool isInZihanki = false;
+
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody2D not found on " + gameObject.name);
+        }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        if (Input.GetKey(KeyCode.UpArrow) && moveCheck)
+        if (!canMove)
         {
-            rb.velocity = new Vector2(0, speed);
-            AibouController.aibouStop = false;
+            rb.velocity = Vector2.zero;
+            return;
         }
 
-        if (Input.GetKey(KeyCode.DownArrow) && moveCheck)
-        {
-            rb.velocity = new Vector2(0, -speed);
-            AibouController.aibouStop = false;
-        }
+        Vector2 input = Vector2.zero;
+        if (Input.GetKey(KeyCode.UpArrow)) input.y += 1f;
+        if (Input.GetKey(KeyCode.DownArrow)) input.y -= 1f;
+        if (Input.GetKey(KeyCode.LeftArrow)) input.x -= 1f;
+        if (Input.GetKey(KeyCode.RightArrow)) input.x += 1f;
 
-        if (Input.GetKey(KeyCode.LeftArrow) && moveCheck)
-        {
-            rb.velocity = new Vector2(-speed, 0);
-            AibouController.aibouStop = false;
-        }
+        rb.velocity = input.normalized * speed;
+    }
 
-        if (Input.GetKey(KeyCode.RightArrow) && moveCheck)
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Return))
         {
-            rb.velocity = new Vector2(speed, 0);
-            AibouController.aibouStop = false;
+            if (isInFinish)
+            {
+                akanaiText.SetActive(true);
+                sikabaneText.SetActive(false);
+                zihankiText.SetActive(false);
+                ShowPanel();
+            }
+            else if (isInShikabane)
+            {
+                sikabaneText.SetActive(true);
+                akanaiText.SetActive(false);
+                zihankiText.SetActive(false);
+                ShowPanel();
+            }
+            else if (isInZihanki)
+            {
+                zihankiText.SetActive(true);
+                akanaiText.SetActive(false);
+                sikabaneText.SetActive(false);
+                ShowPanel();
+            }
         }
-
-        if (!Input.anyKey)
-        {
-            rb.velocity = new Vector2(0, 0);
-        }
-
         if (Input.GetKey(KeyCode.Escape))
         {
-            ButtonClick();
+            OnButtonClick();
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    // 接触開始
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (other.gameObject.tag != "Untagged")
-        {
-            massagePanel.SetActive(true);
-            aibouPic.SetActive(true);
-            moveCheck = false;
-            rb.velocity = new Vector2(0, 0);
-            Invoke("AibouStop",0.1f);
-        }
-
-        if (other.gameObject.tag == "Finish")
-        {
-            akanaiText.SetActive(true);
-            sikabaneText.SetActive(false);
-            zihankiText.SetActive(false);
-        }
-        if (other.gameObject.name == "ObShikabane")
-        {
-            sikabaneText.SetActive(true);
-            akanaiText.SetActive(false);
-            zihankiText.SetActive(false);
-        }
-        if (other.gameObject.name == "ObjZihanki")
-        {
-            zihankiText.SetActive(true);
-            akanaiText.SetActive(false);
-            sikabaneText.SetActive(false);
-        }
+        var other = collision.gameObject;
+        if (other.CompareTag("Finish")) isInFinish = true;
+        if (other.name == "ObShikabane") isInShikabane = true;
+        if (other.name == "ObjZihanki") isInZihanki = true;
+    }
+    // 接触終了
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        var other = collision.gameObject;
+        if (other.CompareTag("Finish")) isInFinish = false;
+        if (other.name == "ObShikabane") isInShikabane = false;
+        if (other.name == "ObjZihanki") isInZihanki = false;
     }
 
-    public void ButtonClick()
+    private void ShowPanel()
     {
-        moveCheck = true;
-        massagePanel.SetActive(false);
+        messagePanel.SetActive(true);
+        aibouPic.SetActive(true);
+        canMove = false;
+        rb.velocity = Vector2.zero;
+        Invoke(nameof(SetAibouStop), 0.1f);
+    }
+
+    public void OnButtonClick()
+    {
+        canMove = true;
+        messagePanel.SetActive(false);
         aibouPic.SetActive(false);
     }
 
-    void AibouStop()
+    private void SetAibouStop()
     {
         AibouController.aibouStop = true;
     }
