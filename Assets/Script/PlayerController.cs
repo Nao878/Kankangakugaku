@@ -21,27 +21,27 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.UpArrow) || up)
         {
-            rb.velocity = new Vector2(0, speed);
+            rb.linearVelocity = new Vector2(0, speed);
         }
 
         if (Input.GetKey(KeyCode.DownArrow) || down)
         {
-            rb.velocity = new Vector2(0, -speed);
+            rb.linearVelocity = new Vector2(0, -speed);
         }
 
         if (Input.GetKey(KeyCode.LeftArrow) || left)
         {
-            rb.velocity = new Vector2(-speed, 0);
+            rb.linearVelocity = new Vector2(-speed, 0);
         }
 
         if (Input.GetKey(KeyCode.RightArrow) || right)
         {
-            rb.velocity = new Vector2(speed, 0);
+            rb.linearVelocity = new Vector2(speed, 0);
         }
 
         if (!Input.anyKey && !up && !down && !left && !right)
         {
-            rb.velocity = new Vector2(0, 0);
+            rb.linearVelocity = new Vector2(0, 0);
         }
     }
 
@@ -83,7 +83,7 @@ public class PlayerController : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("–î‚É“–‚½‚Á‚½");
+        Debug.Log("ï¿½ï¿½É“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         SceneManager.LoadScene("GameOver");
     }
 }

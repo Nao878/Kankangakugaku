@@ -17,7 +17,7 @@ public class OkuzyouPlay : MonoBehaviour
     [SerializeField] private GameObject sikabaneText;
     [SerializeField] private GameObject zihankiText;
 
-    // ŠeƒGƒŠƒA‚²‚Æ‚ÌÚGƒtƒ‰ƒO
+    // ï¿½eï¿½Gï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½Æ‚ÌÚGï¿½tï¿½ï¿½ï¿½O
     private bool isInFinish = false;
     private bool isInShikabane = false;
     private bool isInZihanki = false;
@@ -35,7 +35,7 @@ public class OkuzyouPlay : MonoBehaviour
     {
         if (!canMove)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             return;
         }
 
@@ -45,7 +45,7 @@ public class OkuzyouPlay : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftArrow)) input.x -= 1f;
         if (Input.GetKey(KeyCode.RightArrow)) input.x += 1f;
 
-        rb.velocity = input.normalized * speed;
+        rb.linearVelocity = input.normalized * speed;
     }
 
     private void Update()
@@ -80,7 +80,7 @@ public class OkuzyouPlay : MonoBehaviour
         }
     }
 
-    // ÚGŠJn
+    // ï¿½ÚGï¿½Jï¿½n
     private void OnCollisionEnter2D(Collision2D collision)
     {
         var other = collision.gameObject;
@@ -88,7 +88,7 @@ public class OkuzyouPlay : MonoBehaviour
         if (other.name == "ObShikabane") isInShikabane = true;
         if (other.name == "ObjZihanki") isInZihanki = true;
     }
-    // ÚGI—¹
+    // ï¿½ÚGï¿½Iï¿½ï¿½
     private void OnCollisionExit2D(Collision2D collision)
     {
         var other = collision.gameObject;
@@ -102,7 +102,7 @@ public class OkuzyouPlay : MonoBehaviour
         messagePanel.SetActive(true);
         aibouPic.SetActive(true);
         canMove = false;
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
         Invoke(nameof(SetAibouStop), 0.1f);
     }
 

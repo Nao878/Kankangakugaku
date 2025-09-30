@@ -22,27 +22,27 @@ public class InsekiPlayerController2: MonoBehaviour
     {
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            rb.velocity = new Vector2(0, speed);
+            rb.linearVelocity = new Vector2(0, speed);
         }
 
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            rb.velocity = new Vector2(0, -speed);
+            rb.linearVelocity = new Vector2(0, -speed);
         }
 
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            rb.velocity = new Vector2(-speed, 0);
+            rb.linearVelocity = new Vector2(-speed, 0);
         }
 
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            rb.velocity = new Vector2(speed, 0);
+            rb.linearVelocity = new Vector2(speed, 0);
         }
 
         if (!Input.anyKey)
         {
-            rb.velocity = new Vector2(0, 0);
+            rb.linearVelocity = new Vector2(0, 0);
         }
 
         Instantiate(insekiPrefab, shotPoint.position, shotPoint.rotation);
@@ -69,7 +69,7 @@ public class InsekiPlayerController2: MonoBehaviour
     {
         if(collision.tag == enemyTag)
         {
-            Debug.Log("–î‚É“–‚½‚Á‚½");
+            Debug.Log("ï¿½ï¿½É“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             //SceneManager.LoadScene(nextScene);
         }
     }

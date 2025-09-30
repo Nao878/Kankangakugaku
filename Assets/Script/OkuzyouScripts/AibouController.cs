@@ -21,7 +21,7 @@ public class AibouController : MonoBehaviour
             Vector2 dir = (targetObj.transform.position - this.transform.position).normalized;
             float vx = dir.x * speed;
             float vy = dir.y * speed;
-            rb.velocity = new Vector2(vx, vy);
+            rb.linearVelocity = new Vector2(vx, vy);
         }
     }
 
@@ -29,7 +29,7 @@ public class AibouController : MonoBehaviour
     {
         if (collision.gameObject.name == "Player")
         {
-            Debug.Log("ƒvƒŒƒCƒ„[‚É“–‚½‚Á‚½");
+            Debug.Log("ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½É“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             aibouStop = true;
         }
     }

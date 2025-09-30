@@ -19,27 +19,27 @@ public class InsekiPlayerController : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            rb.velocity = new Vector2(0, speed);
+            rb.linearVelocity = new Vector2(0, speed);
         }
 
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            rb.velocity = new Vector2(0, -speed);
+            rb.linearVelocity = new Vector2(0, -speed);
         }
 
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            rb.velocity = new Vector2(-speed, 0);
+            rb.linearVelocity = new Vector2(-speed, 0);
         }
 
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            rb.velocity = new Vector2(speed, 0);
+            rb.linearVelocity = new Vector2(speed, 0);
         }
 
         if (!Input.anyKey)
         {
-            rb.velocity = new Vector2(0, 0);
+            rb.linearVelocity = new Vector2(0, 0);
         }
     }
 
@@ -65,13 +65,13 @@ public class InsekiPlayerController : MonoBehaviour
         i++;
         if (i > 20)
         {
-            Debug.Log("#TŠ§•¶t");
+            Debug.Log("#ï¿½Tï¿½ï¿½ï¿½ï¿½ï¿½t");
             //SceneManager.LoadScene("PlayGame2");
         }
 
         if (other.CompareTag("Finish"))
         {
-            Debug.Log("#‰´ƒCƒPƒƒ“ ƒCƒNƒƒ“ ƒ‰[ƒƒ“ ‚Â‚¯–Ë •²Ó ‹ÊÓ €‚·");
+            Debug.Log("#ï¿½ï¿½ï¿½Cï¿½Pï¿½ï¿½ï¿½ï¿½ ï¿½Cï¿½Nï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½ ï¿½Â‚ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Êï¿½ ï¿½ï¿½ï¿½ï¿½");
 
         }
     }
