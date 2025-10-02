@@ -26,6 +26,10 @@ public class OkuzyouPlay : MonoBehaviour
     [Header("表示制御オブジェクト")]
     [SerializeField] private GameObject showObject; // トリガー中に表示するオブジェクト
 
+    [Header("追加表示オブジェクト")]
+    [SerializeField] private GameObject secondButton; // 2回目エンターで表示するオブジェクト
+    private int zihankiEnterCount = 0; // エンター押下回数
+
     // 各オブジェクトとの接触状態を管理
     private bool isInFinish = false;    // Finishタグとの接触中
     private bool isInShikabane = false; // ObShikabaneとの接触中
@@ -86,6 +90,11 @@ public class OkuzyouPlay : MonoBehaviour
                 akanaiText.SetActive(false);
                 sikabaneText.SetActive(false);
                 ShowPanel();
+                zihankiEnterCount++;
+                if (zihankiEnterCount == 2 && secondButton != null)
+                {
+                    secondButton.SetActive(true);
+                }
             }
         }
         // Escapeキーでメッセージパネルを閉じる
@@ -126,7 +135,10 @@ public class OkuzyouPlay : MonoBehaviour
     {
         if (other.gameObject == finishObject) isInFinish = false;
         if (other.gameObject == shikabaneObject) isInShikabane = false;
-        if (other.gameObject == zihankiObject) isInZihanki = false;
+        if (other.gameObject == zihankiObject) {
+            isInZihanki = false;
+            zihankiEnterCount = 0; // トリガーから出たらカウントリセット
+        }
         // すべてfalseなら非表示
         if (showObject != null && !(isInFinish || isInShikabane || isInZihanki))
         {
