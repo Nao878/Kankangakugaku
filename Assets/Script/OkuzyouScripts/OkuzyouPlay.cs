@@ -17,6 +17,7 @@ public class OkuzyouPlay : MonoBehaviour
     [SerializeField] private GameObject akanaiText;   // 開かないテキスト
     [SerializeField] private GameObject sikabaneText; // 屍テキスト
     [SerializeField] private GameObject zihankiText;  // 自販機テキスト
+    [SerializeField] private GameObject extraText;    // secondButtonで表示する新しいテキスト
 
     [Header("Collision References")]
     [SerializeField] private GameObject finishObject;      // Finishオブジェクト
@@ -28,7 +29,12 @@ public class OkuzyouPlay : MonoBehaviour
 
     [Header("追加表示オブジェクト")]
     [SerializeField] private GameObject secondButton; // 2回目エンターで表示するオブジェクト
+    [SerializeField] private GameObject targetObject; // secondButtonでアクティブにするオブジェクト
+    [SerializeField] private GameObject imageA; // 交互表示画像A
+    [SerializeField] private GameObject imageB; // 交互表示画像B
     private int zihankiEnterCount = 0; // エンター押下回数
+    private Coroutine switchImagesCoroutine; // コルーチン管理用
+    private int secondButtonClickCount = 0; // secondButtonがクリックされた回数
 
     // 各オブジェクトとの接触状態を管理
     private bool isInFinish = false;    // Finishタグとの接触中
@@ -161,5 +167,50 @@ public class OkuzyouPlay : MonoBehaviour
         canMove = true;
         messagePanel.SetActive(false);
         aibouPic.SetActive(false);
+        if (extraText != null) extraText.SetActive(false); // extraTextも非表示に
+        // コルーチン停止と画像非表示
+        if (switchImagesCoroutine != null)
+        {
+            StopCoroutine(switchImagesCoroutine);
+            switchImagesCoroutine = null;
+        }
+        if (imageA != null) imageA.SetActive(false);
+        if (imageB != null) imageB.SetActive(false);
+    }
+
+    // secondButtonのOnClickイベント用
+    public void OnSecondButtonClick()
+    {
+        secondButtonClickCount++;
+        if (secondButtonClickCount == 2)
+        {
+            SceneManager.LoadScene("gakkou6");
+            return;
+        }
+        if (messagePanel != null) messagePanel.SetActive(true);
+        if (extraText != null) extraText.SetActive(true);
+        if (zihankiText != null) zihankiText.SetActive(false);
+        if (targetObject != null) targetObject.SetActive(true);
+        // コルーチンが既に動いていれば止める（複数同時実行を防ぐ）
+        if (switchImagesCoroutine != null)
+        {
+            StopCoroutine(switchImagesCoroutine);
+            switchImagesCoroutine = null;
+        }
+        // 交互切り替えコルーチン開始
+        switchImagesCoroutine = StartCoroutine(SwitchImagesCoroutine());
+    }
+
+    private IEnumerator SwitchImagesCoroutine()
+    {
+        bool showA = true;
+        while (true)
+        {
+            if (imageA != null) imageA.SetActive(showA);
+            if (imageB != null) imageB.SetActive(!showA);
+            Debug.Log($"SwitchImagesCoroutine: imageA active={showA}, imageB active={!showA}");
+            yield return new WaitForSeconds(1f);
+            showA = !showA;
+        }
     }
 }

@@ -56,5 +56,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GakkouNiIku/gakkou5.unity
     guid: efefa33795ef1f34ca3c8a8f95635a65
+  - enabled: 1
+    path: Assets/Scenes/GakkouNiIku/gakkou6.unity
+    guid: 1c21ac70915924d458f77dbe5ed4ea73
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
