@@ -4,40 +4,72 @@ using System.Collections;
 
 public class gakkou6Novel : MonoBehaviour
 {
-    [SerializeField] private Text textBox; // テキスト欄（UIのTextを割り当て）
-    [SerializeField] private float interval = 2f; // セリフ間隔（秒）
+    [System.Serializable]
+    public class Message
+    {
+        public int characterId; // キャラID（0:キャラ1, 1:キャラ2, ...）
+        public string text;
+    }
 
-    private string[] messages = {
-        "こんにちは！",
-        "今日はいい天気ですね。",
-        "冒険に出かけましょう！",
-        "準備はできていますか？"
+    [SerializeField] private Text textBox; // テキスト欄（UIのTextを割り当て）
+    [SerializeField] private float charInterval = 0.1f; // 1文字ごとの間隔（秒）
+    [SerializeField] private Button nextButton; // 次のセリフ表示用ボタン
+    [SerializeField] private GameObject[] characterObjects; // キャラごとの表示オブジェクト（配列でInspectorに割り当て）
+
+    private Message[] messages = {
+        new Message { characterId = 0, text = "んん？これって..." },
+        new Message { characterId = 0, text = "ごまに関する商品多いな..." },
+        new Message { characterId = 0, text = "これは...この脱出ゲームのヒントかな..." },
+        new Message { characterId = 0, text = "お前何かわかるか？" }
     };
 
     private int currentIndex = 0;
+    private Coroutine typeCoroutine;
+    private bool isTyping = false;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        if (textBox != null)
+        if (nextButton != null)
         {
-            StartCoroutine(TalkCoroutine());
+            nextButton.onClick.AddListener(NextMessage);
         }
+        ShowMessage(currentIndex);
     }
 
-    private IEnumerator TalkCoroutine()
+    private void ShowMessage(int index)
     {
-        while (currentIndex < messages.Length)
+        if (typeCoroutine != null)
         {
-            textBox.text = messages[currentIndex];
+            StopCoroutine(typeCoroutine);
+        }
+        // キャラ表示切替
+        for (int i = 0; i < characterObjects.Length; i++)
+        {
+            if (characterObjects[i] != null)
+                characterObjects[i].SetActive(i == messages[index].characterId);
+        }
+        typeCoroutine = StartCoroutine(TypeText(messages[index].text));
+    }
+
+    private IEnumerator TypeText(string message)
+    {
+        isTyping = true;
+        textBox.text = "";
+        foreach (char c in message)
+        {
+            textBox.text += c;
+            yield return new WaitForSeconds(charInterval);
+        }
+        isTyping = false;
+    }
+
+    public void NextMessage()
+    {
+        if (isTyping) return; // タイピング中は無視
+        if (currentIndex < messages.Length - 1)
+        {
             currentIndex++;
-            yield return new WaitForSeconds(interval);
+            ShowMessage(currentIndex);
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 }
