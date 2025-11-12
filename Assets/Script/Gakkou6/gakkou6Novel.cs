@@ -1,138 +1,127 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 
 public class gakkou6Novel : MonoBehaviour
 {
-    [System.Serializable]
-    public class Message
-    {
-        public int characterId;
-        public string text;
-    }
-    [System.Serializable]
-    public class Choice
-    {
-        public int timingIndex;
-        public string choice1Text;
-        public string choice2Text;
-        public string choice3Text;
-        public string choice4Text;
-        public Message[] branch1;
-        public Message[] branch2;
-        public Message[] branch3;
-        public Message[] branch4;
-    }
-
+    [SerializeField] private string csvFileName = "dialogue"; // Resources/dialogue.csv
     [SerializeField] private Text textBox;
     [SerializeField] private float charInterval = 0.1f;
     [SerializeField] private Button nextButton;
     [SerializeField] private GameObject[] characterObjects;
     [Header("選択肢ボタン")]
-    [SerializeField] private Button choiceButton1;
-    [SerializeField] private Button choiceButton2;
-    [SerializeField] private Button choiceButton3;
-    [SerializeField] private Button choiceButton4;
-    [SerializeField] private Text choiceButton1Text;
-    [SerializeField] private Text choiceButton2Text;
-    [SerializeField] private Text choiceButton3Text;
-    [SerializeField] private Text choiceButton4Text;
+    [SerializeField] private Button[] choiceButtons;
+    [SerializeField] private Text[] choiceButtonTexts;
     [Header("呪文入力欄")]
     [SerializeField] private InputField spellInputField;
 
-    private Message[] messages = {
-        new Message { characterId = 0, text = "んん？これって..." },
-        new Message { characterId = 0, text = "ごまに関する商品多いな..." },
-        new Message { characterId = 0, text = "これは...この脱出ゲームのヒントかな..." },
-        new Message { characterId = 0, text = "お前何かわかるか？" }
-    };
+    private class DialogueEntry
+    {
+        public int index;
+        public int characterId;
+        public string text;
+        public bool isChoice;
+        public string[] choices;
+        public int[] nextIndices;
+        public bool isSpellInput;
+        public int spellSuccessIndex;
+    }
 
-    private Message[] branch1 = {
-        new Message { characterId = -1, text = "屋上の出入り口前に向かった。" },
-        new Message { characterId = 0, text = "呪文を唱えれば開くタイプのドア、童話にあったな" }
-    };
-    private Message[] branch2 = {
-        new Message { characterId = -1, text = "早乙女と話し始めた。" },
-        new Message { characterId = 0, text = "こいつの話はおもんない" }
-    };
-    private Message[] branch3 = {
-        new Message { characterId = -1, text = "自販機の前に行った。" },
-        new Message { characterId = -1, text = "ごま、なんか呪文あった気がする" }
-    };
-    private Message[] branch4 = {
-        new Message { characterId = -1, text = "ひらめいた！" },
-        new Message { characterId = 0, text = "何か思いついたか？" },
-        new Message { characterId = -1, text = "ドアの前で呪文を唱えれば良いんだ！" },
-        new Message { characterId = -1, text = "※唱える呪文をひらがな入力してください" }
-    };
-    private Message[] spellSuccess = {
-        new Message { characterId = 0, text = "ドアが開いた！" }
-    };
-
-    private int currentIndex = 0;
+    private Dictionary<int, DialogueEntry> dialogueDict = new Dictionary<int, DialogueEntry>();
+    private DialogueEntry currentEntry;
     private Coroutine typeCoroutine;
     private bool isTyping = false;
-    private Message[] currentMessages;
-    private string currentFullText = "";
-
-    private bool[] branchSelected = new bool[3];
-    private int branchCount = 0;
-    private bool showChoiceLoop = false;
 
     void Start()
     {
+        LoadDialogueCSV();
+        if (dialogueDict.ContainsKey(0))
+        {
+            currentEntry = dialogueDict[0];
+            ShowEntry(currentEntry);
+        }
         if (nextButton != null)
-        {
-            nextButton.onClick.AddListener(NextMessage);
-        }
-        if (choiceButton1 != null)
-        {
-            choiceButton1.onClick.AddListener(OnChoice1);
-            choiceButton1.gameObject.SetActive(false);
-        }
-        if (choiceButton2 != null)
-        {
-            choiceButton2.onClick.AddListener(OnChoice2);
-            choiceButton2.gameObject.SetActive(false);
-        }
-        if (choiceButton3 != null)
-        {
-            choiceButton3.onClick.AddListener(OnChoice3);
-            choiceButton3.gameObject.SetActive(false);
-        }
-        if (choiceButton4 != null)
-        {
-            choiceButton4.onClick.AddListener(OnChoice4);
-            choiceButton4.gameObject.SetActive(false);
-        }
+            nextButton.onClick.AddListener(OnNext);
         if (spellInputField != null)
         {
             spellInputField.gameObject.SetActive(false);
             spellInputField.onEndEdit.AddListener(OnSpellInputEnd);
         }
-        currentMessages = messages;
-        ShowMessage(currentIndex);
+        for (int i = 0; i < choiceButtons.Length; i++)
+        {
+            int idx = i;
+            choiceButtons[i].onClick.AddListener(() => OnChoice(idx));
+            choiceButtons[i].gameObject.SetActive(false);
+        }
     }
 
-    private void ShowMessage(int index)
+    private void LoadDialogueCSV()
+    {
+        var textAsset = Resources.Load<TextAsset>(csvFileName);
+        if (textAsset == null)
+        {
+            Debug.LogError($"CSV file not found: Resources/{csvFileName}.csv");
+            return;
+        }
+        var lines = textAsset.text.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 1; i < lines.Length; i++) // skip header
+        {
+            var cols = lines[i].Split(',');
+            var entry = new DialogueEntry();
+            entry.index = int.Parse(cols[0]);
+            entry.characterId = int.Parse(cols[1]);
+            entry.text = cols[2];
+            entry.isChoice = cols[3] == "1";
+            entry.choices = new string[4];
+            for (int c = 0; c < 4; c++)
+                entry.choices[c] = cols[4 + c];
+            entry.nextIndices = new int[4];
+            for (int n = 0; n < 4; n++)
+                entry.nextIndices[n] = string.IsNullOrEmpty(cols[8 + n]) ? -1 : int.Parse(cols[8 + n]);
+            entry.isSpellInput = cols.Length > 12 && cols[12] == "1";
+            entry.spellSuccessIndex = cols.Length > 13 && !string.IsNullOrEmpty(cols[13]) ? int.Parse(cols[13]) : -1;
+            dialogueDict[entry.index] = entry;
+        }
+    }
+
+    private void ShowEntry(DialogueEntry entry)
     {
         if (typeCoroutine != null)
-        {
             StopCoroutine(typeCoroutine);
-        }
-        int charId = currentMessages[index].characterId;
-        // キャラ表示切替
+        // キャラ表示
         for (int i = 0; i < characterObjects.Length; i++)
-        {
             if (characterObjects[i] != null)
-                characterObjects[i].SetActive(charId != -1 && i == charId);
+                characterObjects[i].SetActive(entry.characterId != -1 && i == entry.characterId);
+        typeCoroutine = StartCoroutine(TypeText(entry.text));
+        // 選択肢表示
+        if (entry.isChoice)
+        {
+            for (int i = 0; i < choiceButtons.Length; i++)
+            {
+                if (i < entry.choices.Length && !string.IsNullOrEmpty(entry.choices[i]))
+                {
+                    choiceButtonTexts[i].text = entry.choices[i];
+                    choiceButtons[i].gameObject.SetActive(true);
+                }
+                else
+                {
+                    choiceButtons[i].gameObject.SetActive(false);
+                }
+            }
+            if (nextButton != null) nextButton.gameObject.SetActive(false);
         }
-        currentFullText = currentMessages[index].text;
-        typeCoroutine = StartCoroutine(TypeText(currentFullText));
-        // 呪文入力欄表示判定
+        else
+        {
+            foreach (var btn in choiceButtons)
+                btn.gameObject.SetActive(false);
+            if (nextButton != null) nextButton.gameObject.SetActive(true);
+        }
+        // 呪文入力欄表示
         if (spellInputField != null)
         {
-            if (currentFullText == "※唱える呪文をひらがな入力してください")
+            if (entry.isSpellInput)
             {
                 spellInputField.text = "";
                 spellInputField.gameObject.SetActive(true);
@@ -157,134 +146,42 @@ public class gakkou6Novel : MonoBehaviour
         isTyping = false;
     }
 
-    public void NextMessage()
+    private void OnNext()
     {
         if (isTyping)
         {
-            // タイピング中なら全文表示してコルーチン停止
             if (typeCoroutine != null)
             {
                 StopCoroutine(typeCoroutine);
                 typeCoroutine = null;
             }
-            textBox.text = currentFullText;
+            textBox.text = currentEntry.text;
             isTyping = false;
             return;
         }
-        // 最初の選択肢タイミング
-        if (!showChoiceLoop && currentMessages == messages && currentIndex == messages.Length - 1)
+        if (currentEntry.nextIndices != null && currentEntry.nextIndices.Length > 0 && currentEntry.nextIndices[0] != -1)
         {
-            ShowChoiceLoop();
-            return;
-        }
-        // 3択分岐のセリフを読み終えたら再び3択
-        if (showChoiceLoop && currentIndex == currentMessages.Length - 1)
-        {
-            branchCount++;
-            if (branchCount < 3)
-            {
-                ShowChoiceLoop();
-                return;
-            }
-            else
-            {
-                ShowFinalChoice();
-                return;
-            }
-        }
-        if (currentIndex < currentMessages.Length - 1)
-        {
-            currentIndex++;
-            ShowMessage(currentIndex);
+            currentEntry = dialogueDict[currentEntry.nextIndices[0]];
+            ShowEntry(currentEntry);
         }
     }
 
-    // 3択選択肢表示
-    private void ShowChoiceLoop()
+    private void OnChoice(int idx)
     {
-        showChoiceLoop = true;
-        if (choiceButton1 != null && choiceButton1Text != null)
+        if (currentEntry.nextIndices != null && idx < currentEntry.nextIndices.Length && currentEntry.nextIndices[idx] != -1)
         {
-            choiceButton1Text.text = "屋上の出入り口前に行く";
-            choiceButton1.gameObject.SetActive(!branchSelected[0]);
+            currentEntry = dialogueDict[currentEntry.nextIndices[idx]];
+            ShowEntry(currentEntry);
         }
-        if (choiceButton2 != null && choiceButton2Text != null)
-        {
-            choiceButton2Text.text = "早乙女と話す";
-            choiceButton2.gameObject.SetActive(!branchSelected[1]);
-        }
-        if (choiceButton3 != null && choiceButton3Text != null)
-        {
-            choiceButton3Text.text = "自販機の前に行く";
-            choiceButton3.gameObject.SetActive(!branchSelected[2]);
-        }
-        if (nextButton != null) nextButton.gameObject.SetActive(false);
     }
 
-    // 4つ目の「ひらめいた！」ボタン表示
-    private void ShowFinalChoice()
-    {
-        if (choiceButton1 != null) choiceButton1.gameObject.SetActive(false);
-        if (choiceButton2 != null) choiceButton2.gameObject.SetActive(false);
-        if (choiceButton3 != null) choiceButton3.gameObject.SetActive(false);
-        if (choiceButton4 != null && choiceButton4Text != null)
-        {
-            choiceButton4Text.text = "ひらめいた！";
-            choiceButton4.gameObject.SetActive(true);
-        }
-        if (nextButton != null) nextButton.gameObject.SetActive(false);
-    }
-
-    private void OnChoice1()
-    {
-        branchSelected[0] = true;
-        currentMessages = branch1;
-        currentIndex = 0;
-        if (choiceButton1 != null) choiceButton1.gameObject.SetActive(false);
-        if (choiceButton2 != null) choiceButton2.gameObject.SetActive(false);
-        if (choiceButton3 != null) choiceButton3.gameObject.SetActive(false);
-        if (nextButton != null) nextButton.gameObject.SetActive(true);
-        ShowMessage(currentIndex);
-    }
-    private void OnChoice2()
-    {
-        branchSelected[1] = true;
-        currentMessages = branch2;
-        currentIndex = 0;
-        if (choiceButton1 != null) choiceButton1.gameObject.SetActive(false);
-        if (choiceButton2 != null) choiceButton2.gameObject.SetActive(false);
-        if (choiceButton3 != null) choiceButton3.gameObject.SetActive(false);
-        if (nextButton != null) nextButton.gameObject.SetActive(true);
-        ShowMessage(currentIndex);
-    }
-    private void OnChoice3()
-    {
-        branchSelected[2] = true;
-        currentMessages = branch3;
-        currentIndex = 0;
-        if (choiceButton1 != null) choiceButton1.gameObject.SetActive(false);
-        if (choiceButton2 != null) choiceButton2.gameObject.SetActive(false);
-        if (choiceButton3 != null) choiceButton3.gameObject.SetActive(false);
-        if (nextButton != null) nextButton.gameObject.SetActive(true);
-        ShowMessage(currentIndex);
-    }
-    private void OnChoice4()
-    {
-        currentMessages = branch4;
-        currentIndex = 0;
-        if (choiceButton4 != null) choiceButton4.gameObject.SetActive(false);
-        if (nextButton != null) nextButton.gameObject.SetActive(true);
-        ShowMessage(currentIndex);
-    }
     private void OnSpellInputEnd(string input)
     {
-        if (spellInputField != null) spellInputField.gameObject.SetActive(false);
-        if (input.Trim() == "ひらけごま")
+        spellInputField.gameObject.SetActive(false);
+        if (input.Trim() == "ひらけごま" && currentEntry.spellSuccessIndex != -1)
         {
-            currentMessages = spellSuccess;
-            currentIndex = 0;
-            if (nextButton != null) nextButton.gameObject.SetActive(true);
-            ShowMessage(currentIndex);
+            currentEntry = dialogueDict[currentEntry.spellSuccessIndex];
+            ShowEntry(currentEntry);
         }
         else
         {
@@ -295,11 +192,8 @@ public class gakkou6Novel : MonoBehaviour
                 typeCoroutine = null;
             }
             textBox.text = "呪文が違うようだ...";
-            if (spellInputField != null)
-            {
-                spellInputField.text = "";
-                spellInputField.gameObject.SetActive(true);
-            }
+            spellInputField.text = "";
+            spellInputField.gameObject.SetActive(true);
         }
     }
 }

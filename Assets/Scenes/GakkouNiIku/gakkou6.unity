@@ -2151,19 +2151,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a603ee52444d684d92398c71e4a5ecf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  csvFileName: dialogue
   textBox: {fileID: 1053708331}
   charInterval: 0.1
   nextButton: {fileID: 703610805}
   characterObjects:
   - {fileID: 292306358}
-  choiceButton1: {fileID: 150077672}
-  choiceButton2: {fileID: 686245501}
-  choiceButton3: {fileID: 1674346482}
-  choiceButton4: {fileID: 1082515727}
-  choiceButton1Text: {fileID: 465491521}
-  choiceButton2Text: {fileID: 1841175057}
-  choiceButton3Text: {fileID: 1210879051}
-  choiceButton4Text: {fileID: 827394576}
+  choiceButtons:
+  - {fileID: 150077672}
+  - {fileID: 686245501}
+  - {fileID: 1674346482}
+  - {fileID: 1082515727}
+  choiceButtonTexts:
+  - {fileID: 465491521}
+  - {fileID: 1841175057}
+  - {fileID: 1210879051}
+  - {fileID: 827394576}
   spellInputField: {fileID: 1569554261}
 --- !u!4 &1815255622
 Transform:
