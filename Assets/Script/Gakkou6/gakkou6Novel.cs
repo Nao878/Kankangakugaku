@@ -1,10 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 
 public class gakkou6Novel : MonoBehaviour
 {
-    [SerializeField] private DialogueData dialogueData; // ScriptableObject参照
+    [SerializeField] private string csvFileName = "dialogue"; // Resources/dialogue.csv
     [SerializeField] private Text textBox;
     [SerializeField] private float charInterval = 0.1f;
     [SerializeField] private Button nextButton;
@@ -15,14 +17,31 @@ public class gakkou6Novel : MonoBehaviour
     [Header("呪文入力欄")]
     [SerializeField] private InputField spellInputField;
 
-    private DialogueLine currentLine;
+    private class DialogueEntry
+    {
+        public int index;
+        public int characterId;
+        public string text;
+        public bool isChoice;
+        public string[] choices;
+        public int[] nextIndices;
+        public bool isSpellInput;
+        public int spellSuccessIndex;
+    }
+
+    private Dictionary<int, DialogueEntry> dialogueDict = new Dictionary<int, DialogueEntry>();
+    private DialogueEntry currentEntry;
     private Coroutine typeCoroutine;
     private bool isTyping = false;
 
     void Start()
     {
-        currentLine = dialogueData.startLine;
-        ShowLine(currentLine);
+        LoadDialogueCSV();
+        if (dialogueDict.ContainsKey(0))
+        {
+            currentEntry = dialogueDict[0];
+            ShowEntry(currentEntry);
+        }
         if (nextButton != null)
             nextButton.onClick.AddListener(OnNext);
         if (spellInputField != null)
@@ -38,26 +57,52 @@ public class gakkou6Novel : MonoBehaviour
         }
     }
 
-    private void ShowLine(DialogueLine line)
+    private void LoadDialogueCSV()
+    {
+        var textAsset = Resources.Load<TextAsset>(csvFileName);
+        if (textAsset == null)
+        {
+            Debug.LogError($"CSV file not found: Resources/{csvFileName}.csv");
+            return;
+        }
+        var lines = textAsset.text.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 1; i < lines.Length; i++) // skip header
+        {
+            var cols = lines[i].Split(',');
+            var entry = new DialogueEntry();
+            entry.index = int.Parse(cols[0]);
+            entry.characterId = int.Parse(cols[1]);
+            entry.text = cols[2];
+            entry.isChoice = cols[3] == "1";
+            entry.choices = new string[4];
+            for (int c = 0; c < 4; c++)
+                entry.choices[c] = cols[4 + c];
+            entry.nextIndices = new int[4];
+            for (int n = 0; n < 4; n++)
+                entry.nextIndices[n] = string.IsNullOrEmpty(cols[8 + n]) ? -1 : int.Parse(cols[8 + n]);
+            entry.isSpellInput = cols.Length > 12 && cols[12] == "1";
+            entry.spellSuccessIndex = cols.Length > 13 && !string.IsNullOrEmpty(cols[13]) ? int.Parse(cols[13]) : -1;
+            dialogueDict[entry.index] = entry;
+        }
+    }
+
+    private void ShowEntry(DialogueEntry entry)
     {
         if (typeCoroutine != null)
             StopCoroutine(typeCoroutine);
-
         // キャラ表示
         for (int i = 0; i < characterObjects.Length; i++)
             if (characterObjects[i] != null)
-                characterObjects[i].SetActive(line.characterId != -1 && i == line.characterId);
-
-        typeCoroutine = StartCoroutine(TypeText(line.text));
-
+                characterObjects[i].SetActive(entry.characterId != -1 && i == entry.characterId);
+        typeCoroutine = StartCoroutine(TypeText(entry.text));
         // 選択肢表示
-        if (line.isChoice && line.choices != null)
+        if (entry.isChoice)
         {
             for (int i = 0; i < choiceButtons.Length; i++)
             {
-                if (i < line.choices.Length)
+                if (i < entry.choices.Length && !string.IsNullOrEmpty(entry.choices[i]))
                 {
-                    choiceButtonTexts[i].text = line.choices[i];
+                    choiceButtonTexts[i].text = entry.choices[i];
                     choiceButtons[i].gameObject.SetActive(true);
                 }
                 else
@@ -73,11 +118,10 @@ public class gakkou6Novel : MonoBehaviour
                 btn.gameObject.SetActive(false);
             if (nextButton != null) nextButton.gameObject.SetActive(true);
         }
-
         // 呪文入力欄表示
         if (spellInputField != null)
         {
-            if (line.isSpellInput)
+            if (entry.isSpellInput)
             {
                 spellInputField.text = "";
                 spellInputField.gameObject.SetActive(true);
@@ -111,36 +155,33 @@ public class gakkou6Novel : MonoBehaviour
                 StopCoroutine(typeCoroutine);
                 typeCoroutine = null;
             }
-            textBox.text = currentLine.text;
+            textBox.text = currentEntry.text;
             isTyping = false;
             return;
         }
-        if (currentLine.nextLines != null && currentLine.nextLines.Length > 0)
+        if (currentEntry.nextIndices != null && currentEntry.nextIndices.Length > 0 && currentEntry.nextIndices[0] != -1)
         {
-            currentLine = currentLine.nextLines[0];
-            ShowLine(currentLine);
+            currentEntry = dialogueDict[currentEntry.nextIndices[0]];
+            ShowEntry(currentEntry);
         }
     }
 
     private void OnChoice(int idx)
     {
-        if (currentLine.nextLines != null && idx < currentLine.nextLines.Length)
+        if (currentEntry.nextIndices != null && idx < currentEntry.nextIndices.Length && currentEntry.nextIndices[idx] != -1)
         {
-            currentLine = currentLine.nextLines[idx];
-            ShowLine(currentLine);
+            currentEntry = dialogueDict[currentEntry.nextIndices[idx]];
+            ShowEntry(currentEntry);
         }
     }
 
     private void OnSpellInputEnd(string input)
     {
         spellInputField.gameObject.SetActive(false);
-        if (input.Trim() == "ひらけごま")
+        if (input.Trim() == "ひらけごま" && currentEntry.spellSuccessIndex != -1)
         {
-            if (currentLine.spellSuccessLine != null)
-            {
-                currentLine = currentLine.spellSuccessLine;
-                ShowLine(currentLine);
-            }
+            currentEntry = dialogueDict[currentEntry.spellSuccessIndex];
+            ShowEntry(currentEntry);
         }
         else
         {

@@ -2151,7 +2151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a603ee52444d684d92398c71e4a5ecf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogueData: {fileID: 11400000, guid: e9d8772dfdf1a094db1654c929a9a81a, type: 2}
+  csvFileName: dialogue
   textBox: {fileID: 1053708331}
   charInterval: 0.1
   nextButton: {fileID: 703610805}
