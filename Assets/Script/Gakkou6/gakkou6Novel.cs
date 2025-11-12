@@ -16,8 +16,10 @@ public class gakkou6Novel : MonoBehaviour
         public int timingIndex; // 選択肢を出すセリフのインデックス
         public string choice1Text;
         public string choice2Text;
+        public string choice3Text; // 3択用
         public Message[] branch1;
         public Message[] branch2;
+        public Message[] branch3; // 3択用
     }
 
     [SerializeField] private Text textBox; // テキスト欄（UIのTextを割り当て）
@@ -27,8 +29,10 @@ public class gakkou6Novel : MonoBehaviour
     [Header("選択肢ボタン")]
     [SerializeField] private Button choiceButton1; // 選択肢ボタン1
     [SerializeField] private Button choiceButton2; // 選択肢ボタン2
+    [SerializeField] private Button choiceButton3; // 選択肢ボタン3
     [SerializeField] private Text choiceButton1Text;
     [SerializeField] private Text choiceButton2Text;
+    [SerializeField] private Text choiceButton3Text;
 
     // メインシナリオ
     private Message[] messages = {
@@ -37,19 +41,41 @@ public class gakkou6Novel : MonoBehaviour
         new Message { characterId = 0, text = "これは...この脱出ゲームのヒントかな..." },
         new Message { characterId = 0, text = "お前何かわかるか？" }
     };
-    // 最初の選択肢
+    // 選択肢
     private Choice[] choices = {
+        // 1回目の選択肢
         new Choice {
             timingIndex = 3, // 4つ目のセリフの後
             choice1Text = "呪文に関係してるのかも",
             choice2Text = "ごま食べろってことじゃない？",
             branch1 = new Message[] {
                 new Message { characterId = 0, text = "呪文か...何かヒントがあるかもな。" },
-                new Message { characterId = 0, text = "もう少し調べてみよう。" }
+                new Message { characterId = 0, text = "もう少し調べてみよう。" },
+                new Message { characterId = 0, text = "この後どうするんだ？" }
             },
             branch2 = new Message[] {
                 new Message { characterId = 0, text = "ごま食べろってことか？" },
-                new Message { characterId = 0, text = "それはちょっと違う気がするけど..." }
+                new Message { characterId = 0, text = "それはちょっと違う気がするけど..." },
+                new Message { characterId = 0, text = "この後どうするんだ？" }
+            }
+        },
+        // 2回目の選択肢（分岐後の最後のセリフ後）
+        new Choice {
+            timingIndex = 2, // 分岐後の3つ目（index=2）
+            choice1Text = "屋上の出入り口前に行く",
+            choice2Text = "早乙女と話す",
+            choice3Text = "自販機の前に行く",
+            branch1 = new Message[] {
+                new Message { characterId = -1, text = "屋上の出入り口前に向かった。" },
+                new Message { characterId = -1, text = "呪文を唱えれば開くタイプのドア、童話にあったな" }
+            },
+            branch2 = new Message[] {
+                new Message { characterId = -1, text = "早乙女と話し始めた。" },
+                new Message { characterId = 0, text = "こいつの話はおもんない" }
+            },
+            branch3 = new Message[] {
+                new Message { characterId = -1, text = "自販機の前に行った。" },
+                new Message { characterId = -1, text = "ごま、なんか呪文あった気がする" }
             }
         }
     };
@@ -77,6 +103,11 @@ public class gakkou6Novel : MonoBehaviour
             choiceButton2.onClick.AddListener(OnChoice2);
             choiceButton2.gameObject.SetActive(false);
         }
+        if (choiceButton3 != null)
+        {
+            choiceButton3.onClick.AddListener(OnChoice3);
+            choiceButton3.gameObject.SetActive(false);
+        }
         currentMessages = messages;
         ShowMessage(currentIndex);
     }
@@ -87,11 +118,12 @@ public class gakkou6Novel : MonoBehaviour
         {
             StopCoroutine(typeCoroutine);
         }
+        int charId = currentMessages[index].characterId;
         // キャラ表示切替
         for (int i = 0; i < characterObjects.Length; i++)
         {
             if (characterObjects[i] != null)
-                characterObjects[i].SetActive(i == currentMessages[index].characterId);
+                characterObjects[i].SetActive(charId != -1 && i == charId);
         }
         currentFullText = currentMessages[index].text;
         typeCoroutine = StartCoroutine(TypeText(currentFullText));
@@ -124,7 +156,7 @@ public class gakkou6Novel : MonoBehaviour
             return;
         }
         // 選択肢タイミングか？
-        if (choiceStep < choices.Length && currentMessages == messages && currentIndex == choices[choiceStep].timingIndex)
+        if (choiceStep < choices.Length && currentIndex == choices[choiceStep].timingIndex)
         {
             ShowChoice(choices[choiceStep]);
             return;
@@ -148,6 +180,11 @@ public class gakkou6Novel : MonoBehaviour
             choiceButton2Text.text = choice.choice2Text;
             choiceButton2.gameObject.SetActive(true);
         }
+        if (!string.IsNullOrEmpty(choice.choice3Text) && choiceButton3 != null && choiceButton3Text != null)
+        {
+            choiceButton3Text.text = choice.choice3Text;
+            choiceButton3.gameObject.SetActive(true);
+        }
         if (nextButton != null) nextButton.gameObject.SetActive(false);
     }
 
@@ -159,6 +196,10 @@ public class gakkou6Novel : MonoBehaviour
     {
         StartBranch(choices[choiceStep].branch2);
     }
+    private void OnChoice3()
+    {
+        StartBranch(choices[choiceStep].branch3);
+    }
     private void StartBranch(Message[] branch)
     {
         currentMessages = branch;
@@ -166,6 +207,7 @@ public class gakkou6Novel : MonoBehaviour
         choiceStep++;
         if (choiceButton1 != null) choiceButton1.gameObject.SetActive(false);
         if (choiceButton2 != null) choiceButton2.gameObject.SetActive(false);
+        if (choiceButton3 != null) choiceButton3.gameObject.SetActive(false);
         if (nextButton != null) nextButton.gameObject.SetActive(true);
         ShowMessage(currentIndex);
     }
