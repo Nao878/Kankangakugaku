@@ -27,12 +27,20 @@ public class gakkou6Novel : MonoBehaviour
         public int[] nextIndices;
         public bool isSpellInput;
         public int spellSuccessIndex;
+        // ループ選択肢用
+        public bool isLoopChoice;
+        public int loopChoiceCount;
+        public string finalChoiceText;
+        public int finalChoiceIndex;
     }
 
     private Dictionary<int, DialogueEntry> dialogueDict = new Dictionary<int, DialogueEntry>();
     private DialogueEntry currentEntry;
     private Coroutine typeCoroutine;
     private bool isTyping = false;
+    // ループ選択肢履歴
+    private bool[] loopChoiceSelected;
+    private bool loopChoiceActive = false;
 
     void Start()
     {
@@ -82,6 +90,10 @@ public class gakkou6Novel : MonoBehaviour
                 entry.nextIndices[n] = string.IsNullOrEmpty(cols[8 + n]) ? -1 : int.Parse(cols[8 + n]);
             entry.isSpellInput = cols.Length > 12 && cols[12] == "1";
             entry.spellSuccessIndex = cols.Length > 13 && !string.IsNullOrEmpty(cols[13]) ? int.Parse(cols[13]) : -1;
+            entry.isLoopChoice = cols.Length > 14 && cols[14] == "1";
+            entry.loopChoiceCount = cols.Length > 15 && !string.IsNullOrEmpty(cols[15]) ? int.Parse(cols[15]) : 0;
+            entry.finalChoiceText = cols.Length > 16 ? cols[16] : "";
+            entry.finalChoiceIndex = cols.Length > 17 && !string.IsNullOrEmpty(cols[17]) ? int.Parse(cols[17]) : -1;
             dialogueDict[entry.index] = entry;
         }
     }
@@ -98,19 +110,54 @@ public class gakkou6Novel : MonoBehaviour
         // 選択肢表示
         if (entry.isChoice)
         {
-            for (int i = 0; i < choiceButtons.Length; i++)
+            // ループ選択肢の場合
+            if (entry.isLoopChoice)
             {
-                if (i < entry.choices.Length && !string.IsNullOrEmpty(entry.choices[i]))
+                if (loopChoiceSelected == null || loopChoiceSelected.Length != entry.loopChoiceCount)
+                    loopChoiceSelected = new bool[entry.loopChoiceCount];
+                loopChoiceActive = true;
+                int activeCount = 0;
+                for (int i = 0; i < entry.loopChoiceCount; i++)
                 {
-                    choiceButtonTexts[i].text = entry.choices[i];
-                    choiceButtons[i].gameObject.SetActive(true);
+                    if (!loopChoiceSelected[i])
+                    {
+                        choiceButtonTexts[i].text = entry.choices[i];
+                        choiceButtons[i].gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        choiceButtons[i].gameObject.SetActive(false);
+                        activeCount++;
+                    }
                 }
-                else
+                // 全て選択済みなら4つ目の選択肢表示
+                if (activeCount == entry.loopChoiceCount && !string.IsNullOrEmpty(entry.finalChoiceText))
                 {
-                    choiceButtons[i].gameObject.SetActive(false);
+                    choiceButtonTexts[entry.loopChoiceCount].text = entry.finalChoiceText;
+                    choiceButtons[entry.loopChoiceCount].gameObject.SetActive(true);
                 }
+                else if (choiceButtons.Length > entry.loopChoiceCount)
+                {
+                    choiceButtons[entry.loopChoiceCount].gameObject.SetActive(false);
+                }
+                if (nextButton != null) nextButton.gameObject.SetActive(false);
             }
-            if (nextButton != null) nextButton.gameObject.SetActive(false);
+            else
+            {
+                for (int i = 0; i < choiceButtons.Length; i++)
+                {
+                    if (i < entry.choices.Length && !string.IsNullOrEmpty(entry.choices[i]))
+                    {
+                        choiceButtonTexts[i].text = entry.choices[i];
+                        choiceButtons[i].gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        choiceButtons[i].gameObject.SetActive(false);
+                    }
+                }
+                if (nextButton != null) nextButton.gameObject.SetActive(false);
+            }
         }
         else
         {
@@ -168,11 +215,39 @@ public class gakkou6Novel : MonoBehaviour
 
     private void OnChoice(int idx)
     {
-        if (currentEntry.nextIndices != null && idx < currentEntry.nextIndices.Length && currentEntry.nextIndices[idx] != -1)
+        // ループ選択肢の場合
+        if (loopChoiceActive && currentEntry.isLoopChoice)
         {
-            currentEntry = dialogueDict[currentEntry.nextIndices[idx]];
-            ShowEntry(currentEntry);
+            if (idx < currentEntry.loopChoiceCount && !loopChoiceSelected[idx])
+            {
+                loopChoiceSelected[idx] = true;
+                currentEntry = dialogueDict[currentEntry.nextIndices[idx]];
+                ShowEntry(currentEntry);
+            }
+            // 4つ目の選択肢（全て選択済み）
+            else if (idx == currentEntry.loopChoiceCount && AllLoopChoicesSelected())
+            {
+                currentEntry = dialogueDict[currentEntry.finalChoiceIndex];
+                loopChoiceActive = false;
+                ShowEntry(currentEntry);
+            }
         }
+        else
+        {
+            if (currentEntry.nextIndices != null && idx < currentEntry.nextIndices.Length && currentEntry.nextIndices[idx] != -1)
+            {
+                currentEntry = dialogueDict[currentEntry.nextIndices[idx]];
+                ShowEntry(currentEntry);
+            }
+        }
+    }
+
+    private bool AllLoopChoicesSelected()
+    {
+        if (loopChoiceSelected == null) return false;
+        for (int i = 0; i < loopChoiceSelected.Length; i++)
+            if (!loopChoiceSelected[i]) return false;
+        return true;
     }
 
     private void OnSpellInputEnd(string input)
