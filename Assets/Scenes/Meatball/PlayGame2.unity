@@ -611,6 +611,11 @@ Transform:
   - {fileID: 1379897688}
   m_Father: {fileID: 2024176110}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &707326749 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 7945694857650691085, guid: 1447f22663436b04db15ab4b05bdad80, type: 3}
+  m_PrefabInstance: {fileID: 2002546989}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &727170886 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3953977222492891975, guid: 1399bb20710c61547bc207713ee4e5b1, type: 3}
@@ -2133,11 +2138,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faf678e521110ee4fa648e8382c21614, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scene: stage4
+  scene: TitleScene
   scene2: PlayGame3
   scene3: 
   KamiObj: {fileID: 445327633}
   HaikeiObj: {fileID: 1716835235}
+  BGM: {fileID: 707326749}
   buttonSE: {fileID: 8300000, guid: 9641143be16d9994c93e8017fd336266, type: 3}
   VoiceSE: {fileID: 8300000, guid: 6a11138bfdd4316429a166cd35cac720, type: 3}
 --- !u!82 &2024176115

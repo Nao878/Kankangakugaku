@@ -5,6 +5,6 @@ public class AnimationController : MonoBehaviour
 {
     public void OnAnimationEnd()
     {
-        SceneManager.LoadScene("TitleScene");
+        SceneManager.LoadScene("gakkou3");
     }
 }

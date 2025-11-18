@@ -8,7 +8,8 @@ public class KamiImage2 : MonoBehaviour
 {
     public string scene,scene2,scene3;
     public GameObject KamiObj,HaikeiObj;
-    private AudioSource audioSource,BGM;
+    private AudioSource audioSource;
+    public AudioSource BGM;
     public AudioClip buttonSE,VoiceSE;
 
     void Start()
