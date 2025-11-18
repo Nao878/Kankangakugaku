@@ -33,9 +33,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Meatball/PlayGame.unity
     guid: 91bd4821457a3aa42adf9c0ff5e0cfb1
   - enabled: 1
-    path: Assets/Scenes/Meatball/GameMae.unity
-    guid: 60581a27bbb6af049b4020a4797d9d7e
-  - enabled: 1
     path: Assets/Scenes/Meatball/Kami.unity
     guid: 288ec1c2ad16b2e4fbde6e8a79acfa57
   - enabled: 1
