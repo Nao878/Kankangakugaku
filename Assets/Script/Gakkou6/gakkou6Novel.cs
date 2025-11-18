@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -50,6 +51,8 @@ public class gakkou6Novel : MonoBehaviour
         public int finalChoiceIndex; // 4つ目の分岐先ID
         // 背景画像名（Resources内Sprite名）
         public string backgroundImageName;
+        // シーン名（セリフ終了後に読み込む）
+        public string sceneName;
     }
 
     // 全会話データ（index→DialogueEntry）
@@ -126,6 +129,7 @@ public class gakkou6Novel : MonoBehaviour
             entry.finalChoiceText = cols.Length > 16 ? cols[16] : "";
             entry.finalChoiceIndex = cols.Length > 17 && !string.IsNullOrEmpty(cols[17]) ? int.Parse(cols[17]) : -1;
             entry.backgroundImageName = cols.Length > 18 ? cols[18] : "";
+            entry.sceneName = cols.Length > 19 ? cols[19] : "";
             dialogueDict[entry.index] = entry;
         }
     }
@@ -155,6 +159,12 @@ public class gakkou6Novel : MonoBehaviour
                     backgroundChangedOnce = true;
                 }
             }
+        }
+        // シーン遷移（sceneNameが指定されていれば）
+        if (!string.IsNullOrEmpty(entry.sceneName))
+        {
+            SceneManager.LoadScene(entry.sceneName);
+            return;
         }
         // 選択肢表示
         if (entry.isChoice)
@@ -320,7 +330,7 @@ public class gakkou6Novel : MonoBehaviour
                 StopCoroutine(typeCoroutine);
                 typeCoroutine = null;
             }
-            textBox.text = "呪文が違うようだ...";
+            textBox.text = "合言葉が違うようだ...";
             spellInputField.text = "";
             spellInputField.gameObject.SetActive(true);
         }
