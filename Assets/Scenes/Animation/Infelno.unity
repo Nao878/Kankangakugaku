@@ -432,6 +432,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f678670f9afd3f49b5fc28ae9286e6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  nextSceneName: GameOverInfe
 --- !u!224 &215962278861363579
 RectTransform:
   m_ObjectHideFlags: 0

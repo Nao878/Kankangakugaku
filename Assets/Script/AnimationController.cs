@@ -3,8 +3,10 @@ using UnityEngine.SceneManagement;
 
 public class AnimationController : MonoBehaviour
 {
+    public string nextSceneName = "gakkou3";
+
     public void OnAnimationEnd()
     {
-        SceneManager.LoadScene("gakkou3");
+        SceneManager.LoadScene(nextSceneName);
     }
 }

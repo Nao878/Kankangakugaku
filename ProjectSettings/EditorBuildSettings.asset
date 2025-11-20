@@ -56,5 +56,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GakkouNiIku/gakkou6.unity
     guid: 1c21ac70915924d458f77dbe5ed4ea73
+  - enabled: 1
+    path: Assets/Scenes/Animation/GameOverInfe.unity
+    guid: bc1201492210c4946b87c8cf5bbf6319
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
