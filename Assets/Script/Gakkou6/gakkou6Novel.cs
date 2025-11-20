@@ -53,6 +53,8 @@ public class gakkou6Novel : MonoBehaviour
         public string backgroundImageName;
         // シーン名（セリフ終了後に読み込む）
         public string sceneName;
+        // 呪文入力欄の正解ワード
+        public string spellAnswer;
     }
 
     // 全会話データ（index→DialogueEntry）
@@ -130,6 +132,7 @@ public class gakkou6Novel : MonoBehaviour
             entry.finalChoiceIndex = cols.Length > 17 && !string.IsNullOrEmpty(cols[17]) ? int.Parse(cols[17]) : -1;
             entry.backgroundImageName = cols.Length > 18 ? cols[18] : "";
             entry.sceneName = cols.Length > 19 ? cols[19] : "";
+            entry.spellAnswer = cols.Length > 20 ? cols[20] : "";
             dialogueDict[entry.index] = entry;
         }
     }
@@ -317,7 +320,8 @@ public class gakkou6Novel : MonoBehaviour
     private void OnSpellInputEnd(string input)
     {
         spellInputField.gameObject.SetActive(false);
-        if (input.Trim() == "ひらけごま" && currentEntry.spellSuccessIndex != -1)
+        // spellAnswer列で指定された正解ワードと比較
+        if (!string.IsNullOrEmpty(currentEntry.spellAnswer) && input.Trim() == currentEntry.spellAnswer && currentEntry.spellSuccessIndex != -1)
         {
             currentEntry = dialogueDict[currentEntry.spellSuccessIndex];
             ShowEntry(currentEntry);
@@ -330,7 +334,7 @@ public class gakkou6Novel : MonoBehaviour
                 StopCoroutine(typeCoroutine);
                 typeCoroutine = null;
             }
-            textBox.text = "合言葉が違うようだ...";
+            textBox.text = "答えが違うようだ...";
             spellInputField.text = "";
             spellInputField.gameObject.SetActive(true);
         }
