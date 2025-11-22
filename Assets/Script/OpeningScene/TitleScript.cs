@@ -17,6 +17,9 @@ public class TitleScript : MonoBehaviour
 
     public void PressStart2()
     {
+        // 一つ目のエンディングを解禁
+        PlayerPrefs.SetInt("Ending_1", 1);
+        PlayerPrefs.Save();
         SceneManager.LoadScene(scene2);
     }
 
