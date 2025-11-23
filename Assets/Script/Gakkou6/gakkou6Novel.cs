@@ -32,6 +32,9 @@ public class gakkou6Novel : MonoBehaviour
     // 背景切替時に非表示にするオブジェクト
     [Header("背景切替時に非表示にするオブジェクト")]
     [SerializeField] private GameObject hideOnBackgroundChange;
+    // オーディオソース（BGM/効果音などを再生する）
+    [Header("音声再生用 AudioSource（未設定なら自動作成）")]
+    [SerializeField] private AudioSource audioSource;
 
     // CSV1行分のデータ構造
     private class DialogueEntry
@@ -63,6 +66,8 @@ public class gakkou6Novel : MonoBehaviour
         public string spellAnswer;
         // エンディング解禁用の名前（CSVの新列）
         public string unlockEndingName;
+        // 新しい列: 再生する音源ファイル名（Resources内のAudioClip名）
+        public string audioName;
     }
 
     // 全会話データ（index→DialogueEntry）
@@ -106,6 +111,17 @@ public class gakkou6Novel : MonoBehaviour
         // 背景画像は最初非表示
         if (backgroundImage != null)
             backgroundImage.gameObject.SetActive(false);
+
+        // AudioSourceが未設定なら追加して初期化
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.playOnAwake = false;
+            }
+        }
     }
 
     // CSVファイル読み込み・パース
@@ -150,6 +166,8 @@ public class gakkou6Novel : MonoBehaviour
             entry.spellSuccessIndex3 = cols.Length > 24 && !string.IsNullOrEmpty(cols[24]) ? int.Parse(cols[24]) : -1;
             // 新しい列: エンディング解禁用の名前
             entry.unlockEndingName = cols.Length > 25 ? cols[25].Trim() : "";
+            // 新しい列: 音源ファイル名（Resources内のAudioClip名）
+            entry.audioName = cols.Length > 26 ? cols[26].Trim() : "";
             dialogueDict[entry.index] = entry;
         }
     }
@@ -180,6 +198,7 @@ public class gakkou6Novel : MonoBehaviour
                 }
             }
         }
+
         // 新しい機能: 行にunlockEndingNameがあれば、そのエンディングを解禁
         if (!string.IsNullOrEmpty(entry.unlockEndingName))
         {
@@ -188,6 +207,29 @@ public class gakkou6Novel : MonoBehaviour
             PlayerPrefs.Save();
             Debug.Log($"Unlocked ending: {entry.unlockEndingName}");
         }
+
+        // 新しい機能: 行にaudioNameがあれば現在の音源を停止して新しい音源を再生
+        if (!string.IsNullOrEmpty(entry.audioName))
+        {
+            if (audioSource != null && audioSource.isPlaying)
+                audioSource.Stop();
+            var clip = Resources.Load<AudioClip>(entry.audioName);
+            if (clip != null)
+            {
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                    audioSource.playOnAwake = false;
+                }
+                audioSource.clip = clip;
+                audioSource.Play();
+            }
+            else
+            {
+                Debug.LogWarning($"Audio clip not found in Resources: {entry.audioName}");
+            }
+        }
+
         // シーン遷移（sceneNameが指定されていれば）
         if (!string.IsNullOrEmpty(entry.sceneName))
         {
