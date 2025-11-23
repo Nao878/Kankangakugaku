@@ -18,13 +18,26 @@ public class EndingManager : MonoBehaviour
     [Header("エンディング一覧（Inspectorで設定）")]
     public List<EndingInfo> endings;
 
+    [Header("テスト設定")]
+    [Tooltip("チェックすると Start 時に PlayerPrefs をリセットします（テスト用）")]
+    public bool resetPlayerPrefsOnStart = false;
+
     void Start()
     {
+        // テスト時にPlayerPrefsをリセットするオプション
+        if (resetPlayerPrefsOnStart)
+        {
+            PlayerPrefs.DeleteAll();
+            PlayerPrefs.Save();
+            Debug.Log("PlayerPrefs deleted by EndingManager (resetPlayerPrefsOnStart=true)");
+        }
+
         foreach (var ending in endings)
         {
             // PlayerPrefsで達成済みならアクティブ、未達成なら非表示
             bool seen = PlayerPrefs.GetInt("Ending_" + ending.endingName, 0) == 1;
-            ending.endingTextObj.SetActive(seen);
+            if (ending.endingTextObj != null)
+                ending.endingTextObj.SetActive(seen);
         }
     }
 

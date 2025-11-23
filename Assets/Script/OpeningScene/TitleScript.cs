@@ -9,17 +9,32 @@ public class TitleScript : MonoBehaviour
     public string scene2;
     public string scene3;
 
+    // Inspectorでチェック可能なフラグ。チェックされていると PressStart 時に3つ目のエンディングを解禁する
+    public bool Kamigata = false;
+    // Inspectorでチェック可能なフラグ。チェックされていると PressStart2 時に1つ目のエンディングを解禁する
+    public bool Neru = false;
+
     public void PressStart()
     {
-        Debug.Log("Press Start!");
-        SceneManager.LoadScene(scene);    
+        // Kamigataフラグが有効なら3つ目のエンディングを解禁
+        if (Kamigata)
+        {
+            PlayerPrefs.SetInt("Ending_3", 1);
+            PlayerPrefs.Save();
+            Debug.Log("Unlocked Ending_3 due to Kamigata flag.");
+        }
+        SceneManager.LoadScene(scene);
     }
 
     public void PressStart2()
     {
-        // 一つ目のエンディングを解禁
-        PlayerPrefs.SetInt("Ending_1", 1);
-        PlayerPrefs.Save();
+        // Neruフラグが有効なら一つ目のエンディングを解禁
+        if (Neru)
+        {
+            PlayerPrefs.SetInt("Ending_1", 1);
+            PlayerPrefs.Save();
+            Debug.Log("Unlocked Ending_1 due to Neru flag.");
+        }
         SceneManager.LoadScene(scene2);
     }
 

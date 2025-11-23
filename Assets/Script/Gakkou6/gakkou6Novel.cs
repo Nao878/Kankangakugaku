@@ -61,6 +61,8 @@ public class gakkou6Novel : MonoBehaviour
         public string sceneName;
         // 呪文入力欄の正解ワード（1つめ）
         public string spellAnswer;
+        // エンディング解禁用の名前（CSVの新列）
+        public string unlockEndingName;
     }
 
     // 全会話データ（index→DialogueEntry）
@@ -146,6 +148,8 @@ public class gakkou6Novel : MonoBehaviour
             // さらに追加のspellAnswer（3つめ）とその成功Index
             entry.spellAnswer3 = cols.Length > 23 ? cols[23] : "";
             entry.spellSuccessIndex3 = cols.Length > 24 && !string.IsNullOrEmpty(cols[24]) ? int.Parse(cols[24]) : -1;
+            // 新しい列: エンディング解禁用の名前
+            entry.unlockEndingName = cols.Length > 25 ? cols[25].Trim() : "";
             dialogueDict[entry.index] = entry;
         }
     }
@@ -175,6 +179,14 @@ public class gakkou6Novel : MonoBehaviour
                     backgroundChangedOnce = true;
                 }
             }
+        }
+        // 新しい機能: 行にunlockEndingNameがあれば、そのエンディングを解禁
+        if (!string.IsNullOrEmpty(entry.unlockEndingName))
+        {
+            var key = "Ending_" + entry.unlockEndingName;
+            PlayerPrefs.SetInt(key, 1);
+            PlayerPrefs.Save();
+            Debug.Log($"Unlocked ending: {entry.unlockEndingName}");
         }
         // シーン遷移（sceneNameが指定されていれば）
         if (!string.IsNullOrEmpty(entry.sceneName))

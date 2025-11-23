@@ -3280,6 +3280,8 @@ MonoBehaviour:
   scene: gakkou
   scene2: neru
   scene3: GameMae
+  Kamigata: 0
+  Neru: 1
 --- !u!114 &8512210529650949942
 MonoBehaviour:
   m_ObjectHideFlags: 0
