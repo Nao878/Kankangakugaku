@@ -43,7 +43,13 @@ public class gakkou6Novel : MonoBehaviour
         public string[] choices; // 選択肢テキスト
         public int[] nextIndices; // 選択肢ごとの分岐先ID
         public bool isSpellInput; // 呪文入力欄表示
-        public int spellSuccessIndex; // 呪文正解時の分岐先ID
+        public int spellSuccessIndex; // 呪文正解時の分岐先ID（1つめ）
+        // 追加の呪文回答（2つめ）とその分岐先
+        public string spellAnswer2; // 2つめの正解ワード
+        public int spellSuccessIndex2; // 2つめの正解ワードの分岐先ID
+        // 追加の呪文回答（3つめ）とその分岐先
+        public string spellAnswer3; // 3つめの正解ワード
+        public int spellSuccessIndex3; // 3つめの正解ワードの分岐先ID
         // ループ選択肢用
         public bool isLoopChoice; // ループ選択肢か
         public int loopChoiceCount; // ループ選択肢の数
@@ -53,7 +59,7 @@ public class gakkou6Novel : MonoBehaviour
         public string backgroundImageName;
         // シーン名（セリフ終了後に読み込む）
         public string sceneName;
-        // 呪文入力欄の正解ワード
+        // 呪文入力欄の正解ワード（1つめ）
         public string spellAnswer;
     }
 
@@ -132,7 +138,14 @@ public class gakkou6Novel : MonoBehaviour
             entry.finalChoiceIndex = cols.Length > 17 && !string.IsNullOrEmpty(cols[17]) ? int.Parse(cols[17]) : -1;
             entry.backgroundImageName = cols.Length > 18 ? cols[18] : "";
             entry.sceneName = cols.Length > 19 ? cols[19] : "";
+            // 既存のspellAnswer（1つめ）
             entry.spellAnswer = cols.Length > 20 ? cols[20] : "";
+            // 追加のspellAnswer（2つめ）とその成功Index（任意の列がCSVに追加されている場合に読み込む）
+            entry.spellAnswer2 = cols.Length > 21 ? cols[21] : "";
+            entry.spellSuccessIndex2 = cols.Length > 22 && !string.IsNullOrEmpty(cols[22]) ? int.Parse(cols[22]) : -1;
+            // さらに追加のspellAnswer（3つめ）とその成功Index
+            entry.spellAnswer3 = cols.Length > 23 ? cols[23] : "";
+            entry.spellSuccessIndex3 = cols.Length > 24 && !string.IsNullOrEmpty(cols[24]) ? int.Parse(cols[24]) : -1;
             dialogueDict[entry.index] = entry;
         }
     }
@@ -320,23 +333,40 @@ public class gakkou6Novel : MonoBehaviour
     private void OnSpellInputEnd(string input)
     {
         spellInputField.gameObject.SetActive(false);
+        // 入力を正規化（前後の空白を除き、大文字小文字を区別しない）
+        var trimmed = input.Trim();
+        var normalized = trimmed; // そのままの比較だが、必要ならToLower()等で正規化
+
         // spellAnswer列で指定された正解ワードと比較
-        if (!string.IsNullOrEmpty(currentEntry.spellAnswer) && input.Trim() == currentEntry.spellAnswer && currentEntry.spellSuccessIndex != -1)
+        if (!string.IsNullOrEmpty(currentEntry.spellAnswer) && normalized == currentEntry.spellAnswer && currentEntry.spellSuccessIndex != -1)
         {
             currentEntry = dialogueDict[currentEntry.spellSuccessIndex];
             ShowEntry(currentEntry);
+            return;
         }
-        else
+        // 追加の正解ワードがある場合はそちらもチェック
+        if (!string.IsNullOrEmpty(currentEntry.spellAnswer2) && normalized == currentEntry.spellAnswer2 && currentEntry.spellSuccessIndex2 != -1)
         {
-            // 間違いなら即座にエラーメッセージ表示し、再度入力欄を表示
-            if (typeCoroutine != null)
-            {
-                StopCoroutine(typeCoroutine);
-                typeCoroutine = null;
-            }
-            textBox.text = "答えが違うようだ...";
-            spellInputField.text = "";
-            spellInputField.gameObject.SetActive(true);
+            currentEntry = dialogueDict[currentEntry.spellSuccessIndex2];
+            ShowEntry(currentEntry);
+            return;
         }
+        // 3つ目の正解ワードがある場合はそちらもチェック
+        if (!string.IsNullOrEmpty(currentEntry.spellAnswer3) && normalized == currentEntry.spellAnswer3 && currentEntry.spellSuccessIndex3 != -1)
+        {
+            currentEntry = dialogueDict[currentEntry.spellSuccessIndex3];
+            ShowEntry(currentEntry);
+            return;
+        }
+
+        // 間違いなら即座にエラーメッセージ表示し、再度入力欄を表示
+        if (typeCoroutine != null)
+        {
+            StopCoroutine(typeCoroutine);
+            typeCoroutine = null;
+        }
+        textBox.text = "答えが違うようだ...";
+        spellInputField.text = "";
+        spellInputField.gameObject.SetActive(true);
     }
 }
