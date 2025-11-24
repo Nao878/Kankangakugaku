@@ -13,6 +13,8 @@ public class TitleScript : MonoBehaviour
     public bool Kamigata = false;
     // Inspectorでチェック可能なフラグ。チェックされていると PressStart2 時に1つ目のエンディングを解禁する
     public bool Neru = false;
+    // 新しいフラグ: Inspectorでチェックされていると PressStart 時に4つ目のエンディングを解禁する
+    public bool Kami = false;
 
     public void PressStart()
     {
@@ -23,6 +25,15 @@ public class TitleScript : MonoBehaviour
             PlayerPrefs.Save();
             Debug.Log("Unlocked Ending_3 due to Kamigata flag.");
         }
+
+        // Kamiフラグが有効なら4つ目のエンディングを解禁
+        if (Kami)
+        {
+            PlayerPrefs.SetInt("Ending_4", 1);
+            PlayerPrefs.Save();
+            Debug.Log("Unlocked Ending_4 due to Kami flag.");
+        }
+
         SceneManager.LoadScene(scene);
     }
 

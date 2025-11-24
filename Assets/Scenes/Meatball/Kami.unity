@@ -748,6 +748,10 @@ PrefabInstance:
       value: -365
       objectReference: {fileID: 0}
     - target: {fileID: 8512210530285501872, guid: b510b3cf838c42b45b20b00889f76c9c, type: 3}
+      propertyPath: Kami
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8512210530285501872, guid: b510b3cf838c42b45b20b00889f76c9c, type: 3}
       propertyPath: scene
       value: TitleScene
       objectReference: {fileID: 0}
