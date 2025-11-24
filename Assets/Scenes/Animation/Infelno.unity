@@ -433,6 +433,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nextSceneName: GameOverInfe
+  Kamigata: 0
+  Infelno: 1
 --- !u!224 &215962278861363579
 RectTransform:
   m_ObjectHideFlags: 0
