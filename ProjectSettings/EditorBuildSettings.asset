@@ -65,5 +65,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GakkouNiIku/Yamio1.unity
     guid: 967cfc4ba32c998479a2a4db94aa8b70
+  - enabled: 1
+    path: Assets/Scenes/OpeningScene/Setting.unity
+    guid: adc7ac08f45e1ef4ea58e35d4155353b
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

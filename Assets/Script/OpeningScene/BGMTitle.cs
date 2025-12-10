@@ -21,6 +21,11 @@ public class BGMTitle : MonoBehaviour
         SceneManager.LoadScene("endings");
     }
 
+    public void GoSetting()
+    {
+        SceneManager.LoadScene("Setting");
+    }
+
     void Update()
     {
         if (titleCo == 2)
